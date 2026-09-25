@@ -11,7 +11,7 @@
 ### 图解：复制的是切片值，共享的是元素
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["调用者 values：len=1 cap=2"] --> C["同一个底层数组：初始为 1, 0"]
     A -- "传参：复制切片值" --> B["被调用者 values：len=1 cap=2"]
     B --> C
