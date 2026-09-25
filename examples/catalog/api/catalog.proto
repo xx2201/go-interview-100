@@ -1,0 +1,17 @@
+syntax = "proto3";
+package interview.catalog.v1;
+option go_package = "go-interview-100/examples/catalog/api;api";
+
+import "google/api/annotations.proto";
+
+service Catalog {
+  rpc GetItem(GetItemRequest) returns (GetItemReply) {
+    option (google.api.http) = { get: "/v1/items/{id}" };
+  }
+}
+
+message GetItemRequest { string id = 1; }
+message GetItemReply {
+  string id = 1;
+  string name = 2;
+}
