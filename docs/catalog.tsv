@@ -1,0 +1,100 @@
+001	01-language-design	基础	为什么 Go 适合后端？它为简单性付出了什么代价？	go-design
+002	01-language-design	基础	零值为什么重要？如何设计零值可用的类型？	zero-values
+003	01-language-design	基础	Go 只有值传递，为什么修改切片却会影响调用者？	value-semantics
+004	01-language-design	基础	组合与嵌入如何替代继承？	composition
+005	01-language-design	基础	接口为什么隐式实现？应该由谁定义？	interfaces
+006	01-language-design	中级	泛型、接口与代码生成应该如何选择？	generics
+007	01-language-design	基础	error、panic、recover 分别解决什么问题？	errors
+008	01-language-design	中级	defer 的求值、执行顺序与资源释放有什么陷阱？	defer
+009	01-language-design	中级	包如何划分？怎样避免循环依赖和万能 utils？	packages
+010	01-language-design	中级	Go Modules、版本选择与可复现构建如何工作？	modules
+011	02-types-memory	基础	数组和切片有什么区别？append 为什么需要接收返回值？	slices
+012	02-types-memory	中级	切片截取为何可能造成内存滞留？如何控制共享？	slice-retention
+013	02-types-memory	基础	string、byte、rune 如何选择？怎样正确截取中文？	strings
+014	02-types-memory	基础	map 的零值、遍历和并发使用有哪些边界？	maps
+015	02-types-memory	中级	接口里的 nil 为什么不等于 nil？	typed-nil
+016	02-types-memory	中级	值接收者与指针接收者如何影响方法集？	method-sets
+017	02-types-memory	中级	逃逸分析如何决定栈与堆分配？	escape-analysis
+018	02-types-memory	高级	结构体布局、内存对齐与伪共享如何影响性能？	memory-layout
+019	02-types-memory	中级	反射适合哪些边界？为什么业务热路径要谨慎？	reflection
+020	02-types-memory	中级	unsafe 和零拷贝转换的收益与风险是什么？	unsafe
+021	03-concurrency	基础	并发与并行有什么区别？goroutine 为什么不是线程？	concurrency
+022	03-concurrency	基础	channel 的发送、接收和关闭由谁负责？	channels
+023	03-concurrency	中级	select 如何实现取消？为什么 default 可能造成忙等？	select
+024	03-concurrency	基础	Mutex 和 RWMutex 如何选？为什么不能复制锁？	mutex
+025	03-concurrency	中级	原子操作能否替代互斥锁？什么是 happens-before？	atomics
+026	03-concurrency	基础	context 如何传递超时、取消和请求信息？	context
+027	03-concurrency	中级	WaitGroup 与 errgroup 如何管理一组并发任务？	task-groups
+028	03-concurrency	中级	如何设计有界 worker pool 和背压？	worker-pool
+029	03-concurrency	高级	如何定位 goroutine 泄漏和死锁？	leaks
+030	03-concurrency	高级	代码 Review：怎样修复并发聚合中的竞态与取消问题？	concurrency-review
+031	04-runtime-performance	中级	G、M、P 分别是什么？调度器如何分配执行机会？	scheduler
+032	04-runtime-performance	中级	Go GC 如何工作？为什么低停顿不等于没有成本？	gc
+033	04-runtime-performance	高级	GOGC 与 GOMEMLIMIT 如何共同影响吞吐和内存？	gc-tuning
+034	04-runtime-performance	中级	sync.Pool 为什么不能用作连接池或持久缓存？	sync-pool
+035	04-runtime-performance	中级	如何用 benchmark 测量性能而不是测量噪声？	benchmarks
+036	04-runtime-performance	高级	CPU、堆和阻塞 profile 分别回答什么问题？	pprof
+037	04-runtime-performance	高级	如何用 execution trace 定位调度与延迟问题？	trace
+038	04-runtime-performance	中级	怎样减少分配、拷贝和无效格式化？	allocations
+039	04-runtime-performance	高级	QPS、并发数与延迟如何做容量估算？	capacity
+040	04-runtime-performance	高级	场景题：CPU 不高但 P99 激增，如何排查？	tail-latency
+041	05-backend-api	基础	一次 HTTP 请求在 Go 服务中经历哪些阶段？	http-lifecycle
+042	05-backend-api	中级	HTTP 服务端与客户端超时应该如何配置？	http-timeouts
+043	05-backend-api	基础	中间件的执行顺序如何影响日志、鉴权和恢复？	middleware
+044	05-backend-api	基础	REST API 如何设计资源、状态码与分页？	rest
+045	05-backend-api	中级	JSON 的零值、缺省与 null 如何表达？	json
+046	05-backend-api	基础	认证与授权有什么区别？如何防止越权？	auth
+047	05-backend-api	中级	如何实现可靠的接口幂等，而不是简单防重复？	idempotency
+048	05-backend-api	中级	限流、并发限制和负载保护如何配合？	rate-limits
+049	05-backend-api	中级	如何安全处理文件上传和流式响应？	streaming
+050	05-backend-api	中级	优雅关闭如何处理在途请求与后台任务？	shutdown
+051	06-database	基础	database/sql 的 DB 是连接还是连接池？	connection-pool
+052	06-database	基础	事务为什么必须使用同一个 Tx？如何处理提交失败？	transactions
+053	06-database	中级	隔离级别、MVCC 与锁分别保证什么？	isolation
+054	06-database	中级	索引为什么没有生效？如何阅读执行计划？	indexes
+055	06-database	中级	如何避免 N+1 查询和深分页？	query-shapes
+056	06-database	中级	乐观锁和悲观锁如何防止超卖？	stock-locking
+057	06-database	中级	Schema 迁移怎样兼容滚动发布？	migrations
+058	06-database	中级	读写分离为何导致刚写完却读不到？	replication
+059	06-database	高级	分库分表应该如何选择分片键？	sharding
+060	06-database	高级	场景题：数据库连接池耗尽，如何止血与定位？	pool-exhaustion
+061	07-cache-messaging	基础	Cache Aside 如何处理命中、失效和一致性？	cache-aside
+062	07-cache-messaging	中级	缓存穿透、击穿、雪崩应该分别怎样治理？	cache-failures
+063	07-cache-messaging	中级	Redis 分布式锁为何需要所有权与 fencing token？	distributed-locks
+064	07-cache-messaging	中级	本地缓存和分布式缓存怎样组合？	cache-levels
+065	07-cache-messaging	中级	Redis 持久化与复制如何影响数据可靠性？	redis-durability
+066	07-cache-messaging	基础	消息队列中的至少一次与至多一次是什么意思？	delivery
+067	07-cache-messaging	中级	消费者如何做到业务幂等与有序处理？	consumers
+068	07-cache-messaging	高级	Outbox 如何解决写数据库与发消息的双写问题？	outbox
+069	07-cache-messaging	中级	重试、退避与死信队列如何避免故障放大？	message-retries
+070	07-cache-messaging	高级	场景题：消息积压持续增长，如何算清恢复时间？	backlog
+071	08-microservices	基础	什么时候应该拆微服务？边界如何确定？	boundaries
+072	08-microservices	基础	HTTP 与 gRPC 应该如何选择？	grpc
+073	08-microservices	中级	Protobuf 如何演进而不破坏兼容性？	protobuf
+074	08-microservices	中级	服务发现和负载均衡各解决什么问题？	discovery
+075	08-microservices	中级	调用链怎样分配超时预算与重试预算？	budgets
+076	08-microservices	中级	熔断、隔离与降级有什么区别？	resilience
+077	08-microservices	高级	Saga 与 TCC 如何处理跨服务事务？	distributed-transactions
+078	08-microservices	中级	配置与密钥怎样安全变更和轮换？	configuration
+079	08-microservices	中级	日志、指标、追踪如何串起一次故障？	observability
+080	08-microservices	高级	如何设计可回滚的灰度发布与流量切换？	rollouts
+081	09-kratos	基础	Kratos 解决哪些工程问题？何时值得引入？	kratos-overview
+082	09-kratos	基础	Kratos 的 service、biz、data 层如何分工？	layers
+083	09-kratos	中级	Kratos 如何通过 Protobuf 暴露 HTTP 与 gRPC？	transports
+084	09-kratos	中级	Kratos 应用如何装配依赖并释放资源？	dependency-injection
+085	09-kratos	中级	Kratos 的错误模型如何映射业务错误？	kratos-errors
+086	09-kratos	中级	Kratos 中间件与 selector 应该怎样组织？	kratos-middleware
+087	09-kratos	中级	Kratos 配置加载与热更新的边界是什么？	kratos-config
+088	09-kratos	中级	Kratos 如何接入注册发现与客户端治理？	kratos-discovery
+089	09-kratos	高级	如何测试 Kratos 服务而不依赖真实数据库？	kratos-tests
+090	09-kratos	高级	实战题：如何设计一个可观测、可关闭的 Kratos 服务？	kratos-service
+091	10-production-design	基础	Go 服务如何构建为可重复部署的容器？	containers
+092	10-production-design	基础	单元、集成、契约与端到端测试如何分工？	testing
+093	10-production-design	中级	Go fuzzing 与 race detector 能发现哪些问题？	fuzz-race
+094	10-production-design	中级	CI 如何建立依赖、漏洞与构建质量门禁？	ci
+095	10-production-design	中级	SLO、错误预算与告警阈值如何设计？	slo
+096	10-production-design	高级	系统设计：如何实现不会超卖的秒杀下单链路？	flash-sale
+097	10-production-design	高级	系统设计：如何构建支持重试的异步任务平台？	job-platform
+098	10-production-design	中级	代码 Review：一个能运行的 HTTP 服务还缺什么？	backend-review
+099	10-production-design	高级	故障演练：依赖超时如何演变为全站雪崩？	incident
+100	10-production-design	高级	综合追问：从一个 Go 函数走到生产级系统设计	interview-chain
