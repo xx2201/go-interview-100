@@ -6,6 +6,8 @@ import subprocess
 import sys
 import tempfile
 
+sys.stdout.reconfigure(encoding='utf-8')
+
 ROOT = Path(__file__).resolve().parents[1]
 MODULES = ['语言设计', '类型与内存', '并发编程', '运行时与性能', '后端接口', '数据库', '缓存与消息', '微服务', 'Kratos 工程', '生产与系统设计']
 ROWS = [line.split('\t') for line in (ROOT / 'docs/catalog.tsv').read_text(encoding='utf-8').splitlines()]
