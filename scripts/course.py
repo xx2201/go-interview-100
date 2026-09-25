@@ -17,13 +17,18 @@ def path(row):
     return Path(row[1]) / f'{row[0]}-{row[4]}.md'
 
 def run(args):
-    return subprocess.run(args, cwd=ROOT, check=True, capture_output=True, text=True, encoding='utf-8').stdout
+    result = subprocess.run(args, cwd=ROOT, capture_output=True, text=True, encoding='utf-8', timeout=180)
+    if result.returncode:
+        raise RuntimeError(f'{args!r}\n{result.stdout}\n{result.stderr}')
+    return result.stdout
 
-def check_article(row, execute=False):
+def check_article(row, execute=False, race=False):
     p = ROOT / path(row)
     body = p.read_text(encoding='utf-8')
     assert body.startswith(f'# {row[0]} '), f'{p}: 题号不符'
     assert all(body.count(h) == 1 for h in HEADINGS), f'{p}: 四段式不完整'
+    assert [body.index(h) for h in HEADINGS] == sorted(body.index(h) for h in HEADINGS), f'{p}: 段落顺序异常'
+    assert row[3] in body.splitlines()[0], f'{p}: 标题与目录不一致'
     assert body.count('```') % 2 == 0, f'{p}: 代码围栏未闭合'
     assert len(re.findall(r'[\u4e00-\u9fff]', body)) >= 450, f'{p}: 内容不足'
     assert not re.search(r'\bTODO\b|\bTBD\b|待补充|待完善', body), f'{p}: 含占位内容'
@@ -37,7 +42,7 @@ def check_article(row, execute=False):
             with tempfile.TemporaryDirectory(dir=work) as temp:
                 source = Path(temp) / 'main.go'
                 source.write_text(code, encoding='utf-8')
-                actual = run(['go', 'run', str(source)])
+                actual = run(['go', 'run', *(['-race'] if race else []), str(source)])
                 assert actual.strip() == expected.strip(), f'{p}: 输出不符: {actual!r}'
     return len(blocks)
 
@@ -47,6 +52,8 @@ def readme():
 从语言设计到生产系统：用 100 个问题建立 Go 后端知识体系。
 
 本项目面向掌握基本语法、准备后端面试或希望补齐工程能力的开发者。每题先回答核心问题，再通过机制、具体场景、取舍、误区与追问形成完整解释。代码题附可执行示例和预期输出，系统设计题写清假设、失败路径和验证方法。
+
+**已完成：100 / 100 题，每题独立提交。** [可运行的 Kratos HTTP/gRPC 服务](examples/catalog/README.md)把协议、业务、仓储、中间件与生命周期串成完整示例。
 
 ## 知识地图
 
@@ -106,6 +113,7 @@ def main():
     parser.add_argument('action', choices=['init', 'check', 'publish'])
     parser.add_argument('ids', nargs='*')
     parser.add_argument('--execute', action='store_true')
+    parser.add_argument('--race', action='store_true', help='执行 Go 示例并启用 race detector')
     args = parser.parse_args()
     if args.action == 'init':
         readme()
@@ -115,7 +123,7 @@ def main():
     assert len(selected) == (len(args.ids) if args.ids else 100), '题号无效或重复'
     examples = 0
     for row in selected:
-        examples += check_article(row, args.execute)
+        examples += check_article(row, args.execute or args.race, args.race)
         if args.action == 'publish':
             # 每次只暂存当前课程；不把其他已写文件带入该课程提交。
             assert not run(['git', 'diff', '--cached', '--name-only']).strip(), '暂存区非空'
@@ -124,14 +132,25 @@ def main():
             assert staged == [path(row).as_posix()], f'提交范围异常: {staged}'
             print(run(['git', 'commit', '-m', f'docs(course-{row[0]}): {row[3]}']).splitlines()[0], flush=True)
     if not args.ids:
+        assert [r[0] for r in ROWS] == [f'{i:03d}' for i in range(1, 101)], '目录题号不连续'
         assert len(list(ROOT.glob('[0-9][0-9]-*/*.md'))) == 100, '课程数不等于 100'
         for p in ROOT.rglob('*.md'):
             if '.work' in p.parts:
                 continue
-            for target in re.findall(r'\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
+            # 代码围栏和行内代码不属于 Markdown 链接，避免把泛型签名识别为链接。
+            prose = re.sub(r'```.*?```', '', p.read_text(encoding='utf-8'), flags=re.S)
+            prose = re.sub(r'`[^`\n]*`', '', prose)
+            for target in re.findall(r'\[[^\]\n]*\]\(([^)\n]+)\)', prose):
                 if '://' not in target and not target.startswith('#'):
                     assert (p.parent / target.split('#')[0]).exists(), f'{p}: 断链 {target}'
-    print(f'通过：{len(selected)} 题，{examples} 个 Go 示例' + ('（已运行并比对输出）' if args.execute else '（仅结构检查）'))
+        commits = run(['git', 'log', '--format=%H%x09%s']).splitlines()
+        for row in ROWS:
+            matches = [line.split('\t')[0] for line in commits if f'docs(course-{row[0]}):' in line]
+            assert len(matches) == 1, f'{row[0]}: 应有且只有一个首次课程提交'
+            files = run(['git', 'diff-tree', '--no-commit-id', '--name-only', '-r', matches[0]]).splitlines()
+            assert files == [path(row).as_posix()], f'{row[0]}: 课程提交混入其他文件'
+        print('通过：站内链接与 100 个独立课程提交')
+    print(f'通过：{len(selected)} 题，{examples} 个 Go 示例' + ('（已运行并比对输出）' if args.execute or args.race else '（仅结构检查）'))
 
 if __name__ == '__main__':
     main()

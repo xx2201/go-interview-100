@@ -36,7 +36,7 @@
 
 ## 参考资料
 
-- [Vitess 官方：分片](https://vitess.io/docs/overview/scalability/sharding/)
+- [Vitess 官方：分片与扩展](https://vitess.io/docs/23.0/overview/whatisvitess/)
 - [PostgreSQL 16：表分区](https://www.postgresql.org/docs/16/ddl-partitioning.html)
 
 [返回目录](../README.md) · [上一题](058-replication.md) · [下一题](060-pool-exhaustion.md)

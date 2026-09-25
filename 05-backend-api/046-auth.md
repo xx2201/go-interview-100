@@ -40,6 +40,6 @@
 ## 参考资料
 
 - [OWASP 授权检查指南](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html)
-- [OWASP JWT 指南](https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html)
+- [OWASP JWT 指南](https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_Cheat_Sheet.html)
 
 [返回目录](../README.md) · [下一题](047-idempotency.md)
