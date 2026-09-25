@@ -110,7 +110,7 @@ def progress():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['init', 'check', 'publish'])
+    parser.add_argument('action', choices=['init', 'check', 'publish', 'deepen'])
     parser.add_argument('ids', nargs='*')
     parser.add_argument('--execute', action='store_true')
     parser.add_argument('--race', action='store_true', help='执行 Go 示例并启用 race detector')
@@ -124,13 +124,16 @@ def main():
     examples = 0
     for row in selected:
         examples += check_article(row, args.execute or args.race, args.race)
-        if args.action == 'publish':
+        if args.action in ('publish', 'deepen'):
+            if args.action == 'deepen':
+                assert '```mermaid\n' in (ROOT / path(row)).read_text(encoding='utf-8'), f'{row[0]}: 深化课程缺少图解'
             # 每次只暂存当前课程；不把其他已写文件带入该课程提交。
             assert not run(['git', 'diff', '--cached', '--name-only']).strip(), '暂存区非空'
             run(['git', 'add', '--', path(row).as_posix()])
             staged = run(['git', 'diff', '--cached', '--name-only']).splitlines()
             assert staged == [path(row).as_posix()], f'提交范围异常: {staged}'
-            print(run(['git', 'commit', '-m', f'docs(course-{row[0]}): {row[3]}']).splitlines()[0], flush=True)
+            prefix = 'course' if args.action == 'publish' else 'deepen'
+            print(run(['git', 'commit', '-m', f'docs({prefix}-{row[0]}): {row[3]}']).splitlines()[0], flush=True)
     if not args.ids:
         assert [r[0] for r in ROWS] == [f'{i:03d}' for i in range(1, 101)], '目录题号不连续'
         assert len(list(ROOT.glob('[0-9][0-9]-*/*.md'))) == 100, '课程数不等于 100'
