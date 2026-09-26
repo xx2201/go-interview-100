@@ -42,6 +42,50 @@ biz 不应导入生成的 HTTP handler，也不应创建具体 SQL 客户端。�
 
 小项目中某层暂时很薄是可以的，只要它承担清楚的边界职责。若一个层长期只有机械转发，又没有需要隔离的协议或规则，应重新评估其必要性。
 
+### 相同 ID 在三个边界分别意味着什么
+
+HTTP handler 把路径里的 `book` 放进 GetItemRequest，service 通过 `req.GetId()` 取值，Usecase.Get 检查 context 和空白 ID，然后才调用 Repo.Find。MemoryRepo 返回 Item 或 ErrMissing，service 再把 Item 转成 GetItemReply，把缺失事实转成 ITEM_NOT_FOUND。这是具体转换链，不是按目录名称猜出来的职责。
+
+```mermaid
+sequenceDiagram
+    participant T as 传输 handler
+    participant S as Service
+    participant U as Usecase
+    participant R as Repo 实现
+    T->>S: GetItemRequest
+    S->>U: context 与 ID
+    U->>U: 检查取消和空白 ID
+    alt 输入有效且未取消
+        U->>R: Find
+        R-->>U: Item 或领域错误
+    else 输入无效或已取消
+        U->>U: 直接返回错误，不访问仓储
+    end
+    U-->>S: 业务结果
+    S-->>T: Reply 或协议边界错误
+```
+
+一个容易忽略的细节是 `TrimSpace` 在当前代码中只用于判断是否全为空白，并没有把非空 ID 规范化后再查询。`" book "` 会按原字符串查找，不会自动变成 `"book"`。是否允许前后空格应由契约决定，不能在解读代码时把没有实现的清洗逻辑补进去。
+
+### 变更落在哪一层才不扩散
+
+| 需求变化 | 优先修改位置 | 不应顺手耦合的内容 |
+| --- | --- | --- |
+| HTTP 返回字段名变化 | proto 与传输适配 | SQL 驱动细节 |
+| ID 业务合法性变化 | 用例规则及测试 | 具体 HTTP 路由实现 |
+| 目录改存数据库 | Repo 实现与装配 | 把 sql.Rows 暴露给 handler |
+| 缺失错误的公开 reason 变化 | service 契约评审 | 修改所有存储错误文字 |
+
+Repo 接口由业务层声明，是因为业务知道自己需要“按 ID 找商品”这个行为，而不需要一套面向任意表的通用 CRUD。MemoryRepo 的构造函数复制输入 Item 到私有 map，发布后只读；Item 当前只有 string 字段，返回值不会把内部可变 map 暴露出去。如果以后 Item 加入 slice 或指针，必须重新检查别名与并发语义。
+
+### 薄层不等于没有价值，也不应无限增加
+
+当前三层在同一个 catalog 包中按文件组织，所以编译器并没有禁止 service 直接访问 data 的具体类型。这是小型教学服务的组织选择；大型项目若需要强约束，可以按包导出边界实现。不能只看到三个文件名就宣称依赖倒置被语言强制执行。
+
+service 的薄适配仍有价值，因为 HTTP 与 gRPC 都在此取得相同业务错误映射；用例很短，却使空 ID 与取消可以脱离网络单独验证。若未来加一层只原样转发、没有新的规则或依赖边界，应先问它解决什么问题，而不是为了模仿模板继续套层。
+
+测试中的 repoFunc 会在无效或预取消请求到达仓储时直接失败，因此测试不仅检查返回 error，还检查副作用边界。它证明当前用例不会访问仓储，不证明未来 SQL 实现的隔离和锁语义；后者需要适配器集成测试。
+
 ## 常见误区 / 面试追问
 
 - **所有错误都应该由 data 转成 HTTP 状态吗？** 不应把协议语义塞进存储实现，业务事实与传输映射可以分开。
