@@ -1,8 +1,6 @@
-# 验收记录
+# 验证记录
 
-第二轮验收日期：2026-09-26。范围为全部 100 篇课程的深化、图解、文章示例及现有 Kratos 示例工程。发布仓库为 [xx2201/go-interview-100](https://github.com/xx2201/go-interview-100)，分支为 `main`。
-
-首次验收基线为 `3538d9a`：100 篇课程、38 个可执行 Go 示例、100 次独立课程提交。以下是深化后的当前结果，不能将两轮的示例数相加。
+验证日期：2026-09-26。范围为 100 篇课程、图解、文章示例及 Kratos 示例工程。以下记录实际执行的检查及其适用范围，便于读者复现。
 
 ## 课程、图解与提交
 
@@ -28,7 +26,7 @@
 - `go test -race ./examples/catalog/... -count=1`：通过。
 - `go vet ./...`：通过。
 - 仅在构建进程设置 `GOOS=linux`、`GOARCH=amd64`、`CGO_ENABLED=0`，执行 `go build -trimpath -o .work/catalog-linux-amd64 ./examples/catalog/cmd/server`：成功生成 Linux 二进制；未在 Linux 上运行。
-- 首轮已执行 `python scripts/generate_proto.py`，并以 `git diff --exit-code -- examples/catalog/api` 确认生成文件无差异；本轮没有修改协议和生成代码，没有重复执行此项。
+- 协议生成校验记录于提交 `3538d9a`：执行 `python scripts/generate_proto.py`，并以 `git diff --exit-code -- examples/catalog/api` 确认生成文件无差异；此后协议和生成代码未变，本次未重复执行。
 
 双协议服务测试使用真实本地 TCP 和内存只读仓储，覆盖 HTTP/gRPC 成功与错误映射、参数边界、预取消与运行中取消、指标计数和应用停止。指标计数断言不等于抓取 `/metrics` 端点的测试；也没有覆盖 panic 注入、带在途请求退出或任意底层错误的脱敏。
 
@@ -42,4 +40,4 @@
 
 未连接 PostgreSQL、Redis、Kafka、注册中心或 Kubernetes；相关 SQL、Lua、协议时序与容量数字是有明确前提的教学推演。Kratos 部分对照锁定版本源码与仓库真实请求链，不能据此推断外部组件已做集成测试。
 
-未运行容器镜像构建、集群压测、长期 fuzz、govulncheck 或生产故障注入。故障题中的模拟时间线与容量估算均按教学场景标注。完整正文、可运行示例和图解已经完成，没有以占位课程交付；这些实验边界也不会因课程完成而自动消失。
+未运行容器镜像构建、集群压测、长期 fuzz、govulncheck 或生产故障注入。故障题中的模拟时间线与容量估算均按教学场景标注，使用时需要结合实际环境验证。
