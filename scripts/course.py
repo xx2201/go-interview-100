@@ -33,6 +33,7 @@ def check_article(row, execute=False, race=False):
     assert len(re.findall(r'[\u4e00-\u9fff]', body)) >= 450, f'{p}: 内容不足'
     assert not re.search(r'\bTODO\b|\bTBD\b|待补充|待完善', body), f'{p}: 含占位内容'
     assert re.search(r'\]\(https://', body), f'{p}: 缺少资料链接'
+    assert re.search(r'```mermaid\n.+?```', body, re.S), f'{p}: 缺少课程图解'
     blocks = re.findall(r'```go\n(.*?)```\s*```output\n(.*?)```', body, re.S)
     assert len(blocks) == len(re.findall(r'```go\n', body)), f'{p}: Go 示例缺少预期输出'
     if execute:
@@ -53,7 +54,9 @@ def readme():
 
 本项目面向掌握基本语法、准备后端面试或希望补齐工程能力的开发者。每题先回答核心问题，再通过机制、具体场景、取舍、误区与追问形成完整解释。代码题附可执行示例和预期输出，系统设计题写清假设、失败路径和验证方法。
 
-**已完成：100 / 100 题，每题独立提交。** [可运行的 Kratos HTTP/gRPC 服务](examples/catalog/README.md)把协议、业务、仓储、中间件与生命周期串成完整示例。
+**100 / 100 题已完成深化，每题都有图解，并保留首次创作与深化两轮独立提交。** [可运行的 Kratos HTTP/gRPC 服务](examples/catalog/README.md)把协议、业务、仓储、中间件与生命周期串成完整示例。
+
+课程包含可执行 Go 示例、Review 修复前后对照、带前提的容量与故障推演，以及综合追问评分。图解采用 GitHub 可直接显示的 Mermaid，便于跟随请求、状态和资源生命周期阅读。第二轮范围与进度见 [深化计划](docs/DEEPENING_PLAN.md)，与参考项目的具体对照见 [行文思路核查](docs/STYLE_REVIEW.md)。
 
 ## 知识地图
 
@@ -76,6 +79,8 @@ flowchart LR
 2. 跟着「详细解析」推演一次请求或一次故障，运行代码并核对输出。
 3. 遮住答案回答追问，记录自己漏掉的边界，而不是背诵术语。
 4. 用关联题补全依赖知识，用官方资料核对项目实际版本。
+
+先读图中的对象与箭头，再回答「在哪一步失败会留下什么状态」。030 的竞态反例单独标注，098 的错误起点仅用于复现输入缺陷；不要把反例当成可复用的正确实现。
 
 学习路线：入门按 001–030 → 041–052 → 081–085；后端工程按 041–080 → 091–095；性能专项按 017–018 → 025–040 → 060、070；Kratos 专项先读 005、009、026、050、071–079，再读 081–090。综合复习用 096–100。
 
@@ -148,11 +153,12 @@ def main():
                     assert (p.parent / target.split('#')[0]).exists(), f'{p}: 断链 {target}'
         commits = run(['git', 'log', '--format=%H%x09%s']).splitlines()
         for row in ROWS:
-            matches = [line.split('\t')[0] for line in commits if f'docs(course-{row[0]}):' in line]
-            assert len(matches) == 1, f'{row[0]}: 应有且只有一个首次课程提交'
-            files = run(['git', 'diff-tree', '--no-commit-id', '--name-only', '-r', matches[0]]).splitlines()
-            assert files == [path(row).as_posix()], f'{row[0]}: 课程提交混入其他文件'
-        print('通过：站内链接与 100 个独立课程提交')
+            for prefix in ('course', 'deepen'):
+                matches = [line.split('\t')[0] for line in commits if f'docs({prefix}-{row[0]}):' in line]
+                assert len(matches) == 1, f'{row[0]}: 应有且只有一个 {prefix} 课程提交'
+                files = run(['git', 'diff-tree', '--no-commit-id', '--name-only', '-r', matches[0]]).splitlines()
+                assert files == [path(row).as_posix()], f'{row[0]}: {prefix} 提交混入其他文件'
+        print('通过：站内链接、100 篇图解与两轮各 100 个独立课程提交')
     print(f'通过：{len(selected)} 题，{examples} 个 Go 示例' + ('（已运行并比对输出）' if args.execute or args.race else '（仅结构检查）'))
 
 if __name__ == '__main__':
